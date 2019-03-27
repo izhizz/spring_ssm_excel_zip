@@ -1,7 +1,7 @@
 /**
  * Copyright &copy; 2015-2020 <a href="http://www.jeeplus.org/">JeePlus</a> All rights reserved.
  */
-package com.demo.utils.annotation;
+package com.demo.utils.export.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
