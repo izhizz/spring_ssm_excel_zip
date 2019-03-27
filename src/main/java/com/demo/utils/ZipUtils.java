@@ -131,7 +131,6 @@ public class ZipUtils {
                     } else {
                         compress(file, zos, file.getName(),KeepDirStructure);
                     }
-
                 }
             }
         }
