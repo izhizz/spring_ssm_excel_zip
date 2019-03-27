@@ -1,9 +1,7 @@
 package com.demo.utils.export;
 
-import cc.gukeer.common.controller.BasicController;
-import cc.gukeer.common.tld.GukeerStringUtil;
-import cc.gukeer.common.utils.Reflections;
-import cc.gukeer.common.utils.excel.annotation.ExcelField;
+import com.demo.utils.Reflections;
+import com.demo.utils.export.annotation.ExcelField;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.*;
@@ -159,10 +157,10 @@ public class ExportExcelMutiSheet {
                 continue;
             }
             //================================LL===========================================
-            int hebingcout = field.hebingcout();
-            if (hebingcout > 0) {
-                t += ";" + hebingcout;
-            }
+//            int hebingcout = field.hebingcout();
+//            if (hebingcout > 0) {
+//                t += ";" + hebingcout;
+//            }
             //==================================LL=========================================
 
             headerList.add(t);
@@ -676,7 +674,7 @@ public class ExportExcelMutiSheet {
         response.reset();
         response.setContentType("multipart/form-data");
 
-        response.setHeader("Content-Disposition", "attachment; filename=" + BasicController.getFileNameEncoder(request,fileName));
+        response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
         write(wb, response.getOutputStream());
         return this;
     }
@@ -812,10 +810,10 @@ public class ExportExcelMutiSheet {
             }
             reds.add(red);
             //================================LL===========================================
-            int hebingcout = field.hebingcout();
-            if (hebingcout > 0) {
-                t += ";" + hebingcout;
-            }
+//            int hebingcout = field.hebingcout();
+//            if (hebingcout > 0) {
+//                t += ";" + hebingcout;
+//            }
             //==================================LL=========================================
             headerList.add(t);
 
@@ -1093,7 +1091,7 @@ public class ExportExcelMutiSheet {
                 cellType = CellStyle.VERTICAL_CENTER;
             }
             styles.get("intro").setVerticalAlignment(cellType);
-            if (GukeerStringUtil.isEmpty(color)) {
+            if (StringUtils.isEmpty(color)) {
                 color = "intro";
             }
             introCell.setCellStyle(styles.get(color));
