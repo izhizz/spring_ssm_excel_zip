@@ -160,13 +160,14 @@ public class TestController {
     public void zipFile(HttpServletResponse response) throws IOException {
         List<ClassView> classViewList = this.getData();
         new ExportExcel("写入磁盘导出Excel", ClassView.class, 1, "", 1).setDataList(classViewList).writeFile("d:/aaa/写入磁盘导出Excel.xlsx").dispose();
-        String dirzip = "E:\\写入磁盘导出Excel.zip";
+        String dirzip = "E:/写入磁盘导出Excel.zip";
         FileOutputStream fos1 = new FileOutputStream(new File(dirzip));
         ZipUtils.toZip("d:/aaa", fos1, true);
     }
 
     /**
      * 外部资源 访问直接生成压缩包
+     *
      * @param request
      * @param response
      */
@@ -175,11 +176,11 @@ public class TestController {
     public void urlDownZip(HttpServletRequest request, HttpServletResponse response) {
         try {
 //            设置响应头:设置响应流
-            StreamUtils.reponseStreamUtf8("内存压缩包.zip",response);
+            StreamUtils.reponseStreamUtf8("内存压缩包.zip", response);
 //            外部请求资源路径支持数组，list
             String[] pictureArray = {"http://file1.ckmooc.com/1552534945951.jpg"};
 //            压缩外部资源
-            ZipUtils.toUrlZip(pictureArray,response.getOutputStream());
+            ZipUtils.toUrlZip(pictureArray, response.getOutputStream());
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -187,27 +188,6 @@ public class TestController {
 
     }
 
-    /**
-     * 生成Excel 直接下载zip
-     * @param request
-     * @param response
-     */
-    @ResponseBody
-    @RequestMapping(value = "/download/data/zip")
-    public void down(HttpServletRequest request, HttpServletResponse response) {
-        try {
-//            设置响应头:设置响应流
-            StreamUtils.reponseStreamUtf8("内存压缩包.zip",response);
-//            外部请求资源路径支持数组，list
-            String[] pictureArray = {"http://file1.ckmooc.com/1552534945951.jpg"};
-//            压缩外部资源
-            ZipUtils.toUrlZip(pictureArray,response.getOutputStream());
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-    }
 
     private List<ClassView> getData() {
         List<LinkageTest> linkageTests = linkageTestMapper.selectByExample(new LinkageTestExample());

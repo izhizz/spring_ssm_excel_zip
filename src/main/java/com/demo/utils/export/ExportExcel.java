@@ -338,12 +338,12 @@ public class ExportExcel {
      *                   注释anno
      *                   reds:
      */
-    public void initialize(String title, List<String> headerList, String anno, List<Integer> reds, Integer type, String name) {
+    public void initialize(String title, List<String> headerList, String anno, List<Integer> reds, Integer type, String sheetname) {
         this.wb = new SXSSFWorkbook(500);
-        if (name == null) {
-            name = "Export";
+        if (sheetname == null) {
+            sheetname = "Export";
         }
-        this.sheet = wb.createSheet(name);
+        this.sheet = wb.createSheet(sheetname);
         this.styles = createStyles(wb);
         // Create title
         if (StringUtils.isNotBlank(title)) {
