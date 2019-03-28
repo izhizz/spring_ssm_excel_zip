@@ -1,9 +1,8 @@
 package com.demo.utils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -86,6 +85,60 @@ public class ZipUtils {
     }
 
 
+
+    public static void toUrlZip(String[] urls,OutputStream out) throws IOException {
+        ZipOutputStream zos = new ZipOutputStream(out);
+        byte[] buffer = new byte[BUFFER_SIZE];
+        for (int i = 0; i < urls.length; i++) {
+            String file = urls[i];
+            URL url = new URL(file);
+            int suffixIndex = file.lastIndexOf(".");
+            String suffix = file.substring(suffixIndex, file.length());
+//                随便起一个变量名
+            String fileName = "";
+            if (i + 1 < 10) {
+                fileName = "0" + (i + 1);
+            } else {
+                fileName = "" + i;
+            }
+            zos.putNextEntry(new ZipEntry(fileName + suffix));
+            InputStream fis = url.openConnection().getInputStream();
+            int r ;
+            while ((r = fis.read(buffer)) != -1) {
+                zos.write(buffer, 0, r);
+            }
+            fis.close();
+        }
+        zos.flush();
+        zos.close();
+    }
+    public static void toUrlZip(List<String> urls,OutputStream out) throws IOException {
+        ZipOutputStream zos = new ZipOutputStream(out);
+        byte[] buffer = new byte[BUFFER_SIZE];
+        for (int i = 0; i < urls.size(); i++) {
+            String file = urls.get(i);
+            URL url = new URL(file);
+            int suffixIndex = file.lastIndexOf(".");
+            String suffix = file.substring(suffixIndex, file.length());
+//                随便起一个变量名
+            String fileName = "";
+            if (i + 1 < 10) {
+                fileName = "0" + (i + 1);
+            } else {
+                fileName = "" + i;
+            }
+            zos.putNextEntry(new ZipEntry(fileName + suffix));
+            InputStream fis = url.openConnection().getInputStream();
+            int r ;
+            while ((r = fis.read(buffer)) != -1) {
+                zos.write(buffer, 0, r);
+            }
+            fis.close();
+        }
+        zos.flush();
+        zos.close();
+    }
+
     /**
      * 递归压缩方法
      * @param sourceFile 源文件
@@ -135,5 +188,8 @@ public class ZipUtils {
             }
         }
     }
+
+
+
 
 }

@@ -6,6 +6,8 @@ import com.demo.persistence.dao.TestMapper;
 import com.demo.persistence.entity.LinkageTest;
 import com.demo.persistence.entity.LinkageTestExample;
 import com.demo.persistence.entity.Test;
+import com.demo.utils.ConstantUtil;
+import com.demo.utils.StreamUtils;
 import com.demo.utils.ZipUtils;
 import com.demo.utils.export.ExportExcel;
 import org.apache.commons.lang3.StringUtils;
@@ -14,15 +16,18 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  *
@@ -103,7 +108,7 @@ public class TestController {
         Map<String, String> njMap = new HashMap<>();
 //        根据nj分组班级map
         Map<String, List<ClassView>> njCollect = classViewList.stream()
-                .peek(classView -> njMap.put(classView.getNj(),classView.getNj()))
+                .peek(classView -> njMap.put(classView.getNj(), classView.getNj()))
                 .collect(Collectors.groupingBy(ClassView::getNj));
 
 //        获得班级名称的一个数组
@@ -145,9 +150,8 @@ public class TestController {
     }
 
 
-
     /**
-     * excel 写入磁盘
+     * zip 写入磁盘
      *
      * @param response
      * @throws IOException
@@ -155,12 +159,55 @@ public class TestController {
     @RequestMapping("/zip/io")
     public void zipFile(HttpServletResponse response) throws IOException {
         List<ClassView> classViewList = this.getData();
-        new ExportExcel("无注释导出Excel", ClassView.class, 1, "", 1).setDataList(classViewList).writeFile("d:/aaa/磁盘写入.xlsx").dispose();
-        String dirzip =   "E:\\aa.zip";
+        new ExportExcel("写入磁盘导出Excel", ClassView.class, 1, "", 1).setDataList(classViewList).writeFile("d:/aaa/写入磁盘导出Excel.xlsx").dispose();
+        String dirzip = "E:\\写入磁盘导出Excel.zip";
         FileOutputStream fos1 = new FileOutputStream(new File(dirzip));
         ZipUtils.toZip("d:/aaa", fos1, true);
     }
 
+    /**
+     * 外部资源 访问直接生成压缩包
+     * @param request
+     * @param response
+     */
+    @ResponseBody
+    @RequestMapping(value = "/url/download/data/zip")
+    public void urlDownZip(HttpServletRequest request, HttpServletResponse response) {
+        try {
+//            设置响应头:设置响应流
+            StreamUtils.reponseStreamUtf8("内存压缩包.zip",response);
+//            外部请求资源路径支持数组，list
+            String[] pictureArray = {"http://file1.ckmooc.com/1552534945951.jpg"};
+//            压缩外部资源
+            ZipUtils.toUrlZip(pictureArray,response.getOutputStream());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 生成Excel 直接下载zip
+     * @param request
+     * @param response
+     */
+    @ResponseBody
+    @RequestMapping(value = "/download/data/zip")
+    public void down(HttpServletRequest request, HttpServletResponse response) {
+        try {
+//            设置响应头:设置响应流
+            StreamUtils.reponseStreamUtf8("内存压缩包.zip",response);
+//            外部请求资源路径支持数组，list
+            String[] pictureArray = {"http://file1.ckmooc.com/1552534945951.jpg"};
+//            压缩外部资源
+            ZipUtils.toUrlZip(pictureArray,response.getOutputStream());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
 
     private List<ClassView> getData() {
         List<LinkageTest> linkageTests = linkageTestMapper.selectByExample(new LinkageTestExample());

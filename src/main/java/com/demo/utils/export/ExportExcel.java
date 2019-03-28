@@ -775,6 +775,7 @@ public class ExportExcel {
      */
     public ExportExcel write(OutputStream os) throws IOException {
         wb.write(os);
+
         return this;
     }
 
@@ -803,10 +804,10 @@ public class ExportExcel {
     /**
      * 输出到压缩包
      *
-     * @param name 输出文件名
+     *
      * @param zipOutputStream 压缩文件流
      */
-    public ExportExcel writeZipFile(ZipOutputStream zipOutputStream,String name) throws  IOException {
+    public ExportExcel writeZipFile(ZipOutputStream zipOutputStream) throws  IOException {
         this.write(zipOutputStream);
         return this;
     }
