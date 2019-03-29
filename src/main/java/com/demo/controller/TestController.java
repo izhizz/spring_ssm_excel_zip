@@ -10,7 +10,9 @@ import com.demo.utils.ConstantUtil;
 import com.demo.utils.StreamUtils;
 import com.demo.utils.ZipUtils;
 import com.demo.utils.export.ExportExcel;
+import com.demo.utils.export.ExportExcelMutiSheet;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -130,6 +132,7 @@ public class TestController {
 
         ExportExcel exportExcel = new ExportExcel(ClassView.class, 2, 1);
         exportExcel.initialize("联动测试", exportExcel.headerList, "", exportExcel.reds, 2, "联动测试");
+//        rownum 需要判断从哪里开始 默认开始从1
         exportExcel.cascade("班级", "年级", njArray, classNameArrayMap, 1);
         exportExcel.setDataList(new ArrayList()).write(response, "联动测试.xlsx").dispose();
     }
@@ -144,7 +147,6 @@ public class TestController {
     @RequestMapping("/write/io")
     public void writeExcel(HttpServletResponse response) throws IOException {
         List<ClassView> classViewList = this.getData();
-
 //        type = 1 代表无注释
         new ExportExcel("无注释导出Excel", ClassView.class, 1, "", 1).setDataList(classViewList).writeFile("d:/磁盘写入.xlsx").dispose();
     }
@@ -159,7 +161,9 @@ public class TestController {
     @RequestMapping("/zip/io")
     public void zipFile(HttpServletResponse response) throws IOException {
         List<ClassView> classViewList = this.getData();
-        new ExportExcel("写入磁盘导出Excel", ClassView.class, 1, "", 1).setDataList(classViewList).writeFile("d:/aaa/写入磁盘导出Excel.xlsx").dispose();
+        new ExportExcel("写入磁盘导出Excel", ClassView.class, 1, "", 1).setDataList(classViewList)
+                .writeFile("d:/aaa/写入磁盘导出Excel.xlsx").dispose();
+
         String dirzip = "E:/写入磁盘导出Excel.zip";
         FileOutputStream fos1 = new FileOutputStream(new File(dirzip));
         ZipUtils.toZip("d:/aaa", fos1, true);
@@ -181,6 +185,28 @@ public class TestController {
             String[] pictureArray = {"http://file1.ckmooc.com/1552534945951.jpg"};
 //            压缩外部资源
             ZipUtils.toUrlZip(pictureArray, response.getOutputStream());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 多sheet页设置
+     *
+     * @param request
+     * @param response
+     */
+    @ResponseBody
+    @RequestMapping(value = "/multi/sheet")
+    public void mulitySheet(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            SXSSFWorkbook wb = new SXSSFWorkbook();
+            new ExportExcelMutiSheet(wb, "网关批量绑定", 0, "网关批量绑定", ClassView.class, 2, "", 1).setDataList(new ArrayList(), wb);
+            new ExportExcelMutiSheet(wb, "区域列表", 1, "区域列表", ClassView.class, 1, "").setDataList(new ArrayList(), wb);
+            new ExportExcelMutiSheet(wb, "教室列表",2, "教室列表", ClassView.class, 1, "").setDataList(new ArrayList(), wb);
+            new ExportExcelMutiSheet(wb, "示例数据",3, "网关批量绑定模板", ClassView.class, 2, "", 1).setDataList(new ArrayList(), wb).write(wb, response, "aa.xlsx").dispose(wb);
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

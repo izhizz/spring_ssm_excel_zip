@@ -1,5 +1,7 @@
 package com.demo.utils.export;
 
+
+import com.demo.utils.HttpExplorer;
 import com.demo.utils.Reflections;
 import com.demo.utils.export.annotation.ExcelField;
 import com.google.common.collect.Lists;
@@ -55,19 +57,15 @@ public class ExportExcelMutiSheet {
      */
     List<Object[]> annotationList = Lists.newArrayList();
 
-    public Integer checkHide = 0;
-
     /**
      * 构造函数
      *
      * @param title 表格标题，传“空值”，表示无标题
      * @param cls   实体对象，通过annotation.ExportField获取标题
      */
-    public ExportExcelMutiSheet(SXSSFWorkbook wb, String sheetName, Integer _hide, Integer sheetIndex, String title, String anno, Class<?> cls) {
-        this(wb, sheetName,_hide, sheetIndex, title, cls, 1, anno);
+    public ExportExcelMutiSheet(SXSSFWorkbook wb,String sheetName,Integer sheetIndex,String title, String anno, Class<?> cls) {
+        this(wb,sheetName,sheetIndex,title, cls, 1, anno);
     }
-
-    public ExportExcelMutiSheet() { }
 
     /**
      * 构造函数
@@ -77,8 +75,7 @@ public class ExportExcelMutiSheet {
      * @param type   导出类型（1:导出数据；2：导出模板）
      * @param groups 导入分组
      */
-    public ExportExcelMutiSheet(SXSSFWorkbook wb, String sheetName, Integer _hide, Integer sheetIndex, String title, Class<?> cls, int type, String anno, int... groups) {
-        checkHide=_hide;
+    public ExportExcelMutiSheet(SXSSFWorkbook wb,String sheetName,Integer sheetIndex,String title, Class<?> cls, int type, String anno, int... groups) {
         // Get annotation field
         Field[] fs = cls.getDeclaredFields();
         for (Field f : fs) {
@@ -129,6 +126,7 @@ public class ExportExcelMutiSheet {
         }
         // Field sorting
         Collections.sort(annotationList, new Comparator<Object[]>() {
+            @Override
             public int compare(Object[] o1, Object[] o2) {
                 return new Integer(((ExcelField) o1[0]).sort()).compareTo(
                         new Integer(((ExcelField) o2[0]).sort()));
@@ -152,20 +150,9 @@ public class ExportExcelMutiSheet {
                 }
             }
             reds.add(red);
-            int hide = ((ExcelField) os[0]).hide();
-            if (checkHide==0&&hide == 1) {
-                continue;
-            }
-            //================================LL===========================================
-//            int hebingcout = field.hebingcout();
-//            if (hebingcout > 0) {
-//                t += ";" + hebingcout;
-//            }
-            //==================================LL=========================================
-
             headerList.add(t);
         }
-        initialize(wb, sheetName, sheetIndex, title, headerList, anno, reds, type);
+        initialize(wb,sheetName,sheetIndex,title, headerList, anno, reds, type);
     }
 
     /**
@@ -174,8 +161,8 @@ public class ExportExcelMutiSheet {
      * @param title   表格标题，传“空值”，表示无标题
      * @param headers 表头数组
      */
-    public ExportExcelMutiSheet(SXSSFWorkbook wb, String sheetName, Integer sheetIndex, String title, String[] headers, String anno) {
-        initialize(wb, sheetName, sheetIndex, title, Lists.newArrayList(headers), anno, null, null);
+    public ExportExcelMutiSheet(SXSSFWorkbook wb,String sheetName,Integer sheetIndex,String title, String[] headers, String anno) {
+        initialize(wb,sheetName,sheetIndex,title, Lists.newArrayList(headers), anno, null, null);
     }
 
     /**
@@ -184,10 +171,9 @@ public class ExportExcelMutiSheet {
      * @param title      表格标题，传“空值”，表示无标题
      * @param headerList 表头列表
      */
-    public ExportExcelMutiSheet(SXSSFWorkbook wb, String sheetName, Integer sheetIndex, String title, List<String> headerList, String anno, int type) {
-        initialize(wb, sheetName, sheetIndex, title, headerList, anno, null, type);
+    public ExportExcelMutiSheet(SXSSFWorkbook wb,String sheetName,Integer sheetIndex,String title, List<String> headerList, String anno, int type) {
+        initialize(wb,sheetName,sheetIndex,title, headerList, anno, null, type);
     }
-
 
     /**
      * 初始化函数
@@ -195,14 +181,14 @@ public class ExportExcelMutiSheet {
      * @param title      表格标题，传“空值”，表示无标题
      * @param headerList 表头列表
      */
-    private void initialize(SXSSFWorkbook wb, String sheetName, Integer sheetIndex, String title, List<String> headerList, String anno, List<Integer> reds, Integer type) {
+    private void initialize(SXSSFWorkbook wb,String sheetName,Integer sheetIndex,String title, List<String> headerList, String anno, List<Integer> reds, Integer type) {
 
         this.sheet = wb.createSheet();
-        wb.setSheetName(sheetIndex, sheetName);
+        wb.setSheetName(sheetIndex,sheetName);
 
         if (headerList.size() > 1) {
             this.styles = createStyles(wb);
-        } else {
+        }else{
             this.styles = createSingleStyles(wb);
         }
         // Create title
@@ -236,74 +222,8 @@ public class ExportExcelMutiSheet {
         }
         Row headerRow = sheet.createRow(rownum++);
         headerRow.setHeightInPoints(16);
-
-        Integer recordTotalCell = 0;
         for (int i = 0; i < headerList.size(); i++) {
-            //==========================滑腻腻的分割线以下部分是LL所写  有问题找她哦===========================
-            //这里是控制表头是否合并单元格的
-            //创建单元格的时候   index包含头不包含尾 （和substring很像哦）
-            String oneHead = headerList.get(i);
-            Integer cells = 0;
-            if (oneHead.indexOf(";") > 0) {
-                String[] headAndCellCount = oneHead.split(";");
-                String strCell = headAndCellCount[1];
-                cells = Integer.parseInt(strCell);
-            }
-
-            //是否合单元格的判断
-            Cell cell =  null;
-            if (i>0){
-                cell = headerRow.createCell(recordTotalCell);
-            }else {
-                cell =  headerRow.createCell(i);
-            }
-            if (cells>0){
-                for (int m=1;m<cells;m++){
-                    recordTotalCell++;
-//                    System.out.println(recordTotalCell);
-                    headerRow.createCell(recordTotalCell);
-                    if (cells-1==m){
-                        recordTotalCell++;
-                    }
-                }
-            }else {
-                recordTotalCell++;
-            }
-
-            String[] ss = StringUtils.split(headerList.get(i), "**", 2);
-            if (ss.length == 2) {
-                if (ss[0].indexOf(";")>0){
-//                    System.out.println(ss[0].split(";")[0]);
-                    cell.setCellValue(ss[0].split(";")[0]);
-                } else {
-//                    System.out.println(ss[0].split(";")[0]);
-                    cell.setCellValue(ss[0]);
-                }
-
-                Comment comment = this.sheet.createDrawingPatriarch().createCellComment(
-                        new XSSFClientAnchor(0, 0, 0, 0, (short) 3, 3, (short) 5, 6));
-                comment.setString(new XSSFRichTextString(ss[1]));
-                cell.setCellComment(comment);
-            } else {
-                if (ss[0].indexOf(";")>0){
-//                    System.out.println(ss[0].split(";")[0]);
-                        cell.setCellValue(ss[0].split(";")[0]);
-//                    cell.setCellValue(new XSSFRichTextString(ss[0].split(";")[0]));
-                }else {
-//                    System.out.println(headerList.get(i));
-                    cell.setCellValue(new XSSFRichTextString(headerList.get(i)));
-                }
-            }
-
-
-
-            if (cells > 0) {
-                CellRangeAddress region = new CellRangeAddress(headerRow.getRowNum(),
-                        headerRow.getRowNum(), recordTotalCell-cells, recordTotalCell-1);
-                sheet.addMergedRegion(region);
-            }
-
-
+            Cell cell = headerRow.createCell(i);
             if (reds != null && reds.size() > 0) {
                 if (reds.get(i) == 0) {
                     cell.setCellStyle(styles.get("header"));
@@ -313,7 +233,16 @@ public class ExportExcelMutiSheet {
                 }
             }
 
-
+            String[] ss = StringUtils.split(headerList.get(i), "**", 2);
+            if (ss.length == 2) {
+                cell.setCellValue(ss[0]);
+                Comment comment = this.sheet.createDrawingPatriarch().createCellComment(
+                        new XSSFClientAnchor(0, 0, 0, 0, (short) 3, 3, (short) 5, 6));
+                comment.setString(new XSSFRichTextString(ss[1]));
+                cell.setCellComment(comment);
+            } else {
+                cell.setCellValue(headerList.get(i));
+            }
 //            sheet.autoSizeColumn(i);
         }
         for (int i = 0; i < headerList.size(); i++) {
@@ -512,7 +441,6 @@ public class ExportExcelMutiSheet {
 
         return styles;
     }
-
     /**
      * 添加一行
      *
@@ -531,8 +459,8 @@ public class ExportExcelMutiSheet {
      * @param val    添加值
      * @return 单元格对象
      */
-    public Cell addCell(SXSSFWorkbook wb, Row row, int column, Object val) {
-        return this.addCell(wb, row, column, val, 0, Class.class);
+    public Cell addCell(SXSSFWorkbook wb,Row row, int column, Object val) {
+        return this.addCell(wb,row, column, val, 0, Class.class);
     }
 
     /**
@@ -544,25 +472,24 @@ public class ExportExcelMutiSheet {
      * @param align  对齐方式（1：靠左；2：居中；3：靠右）
      * @return 单元格对象
      */
-    public Cell addCell(SXSSFWorkbook wb, Row row, int column, Object val, int align, Class<?> fieldType) {
+    public Cell addCell(SXSSFWorkbook wb,Row row, int column, Object val, int align, Class<?> fieldType) {
         Cell cell = row.createCell(column);
         CellStyle style = styles.get("data" + (align >= 1 && align <= 3 ? align : ""));
-        DataFormat format = wb.createDataFormat();
-        style.setDataFormat(format.getFormat("@"));
         try {
             if (val == null) {
                 cell.setCellValue("");
             } else if (val instanceof String) {
                 cell.setCellValue((String) val);
             } else if (val instanceof Integer) {
-                cell.setCellValue((String) val);
+                cell.setCellValue((Integer) val);
             } else if (val instanceof Long) {
-                cell.setCellValue((String) val);
+                cell.setCellValue((Long) val);
             } else if (val instanceof Double) {
                 cell.setCellValue((Double) val);
             } else if (val instanceof Float) {
                 cell.setCellValue((Float) val);
             } else if (val instanceof Date) {
+                DataFormat format = wb.createDataFormat();
                 style.setDataFormat(format.getFormat("yyyy-MM-dd"));
                 cell.setCellValue((Date) val);
             } else {
@@ -578,7 +505,6 @@ public class ExportExcelMutiSheet {
             cell.setCellValue(val.toString());
         }
         cell.setCellStyle(style);
-        cell.setCellType(Cell.CELL_TYPE_STRING);
         return cell;
     }
 
@@ -587,7 +513,7 @@ public class ExportExcelMutiSheet {
      *
      * @return list 数据列表
      */
-    public <E> ExportExcelMutiSheet setDataList(List<E> list, SXSSFWorkbook wb) {
+    public <E> ExportExcelMutiSheet setDataList(List<E> list,SXSSFWorkbook wb) {
         for (E e : list) {
             int colunm = 0;
             Row row = this.addRow();
@@ -615,7 +541,7 @@ public class ExportExcelMutiSheet {
                     log.info(ex.toString());
                     val = "";
                 }
-                this.addCell(wb, row, colunm++, val, ef.align(), ef.fieldType());
+                this.addCell(wb,row, colunm++, val, ef.align(), ef.fieldType());
                 sb.append(val + ", ");
             }
             if (annotationList.size() == 0) {
@@ -642,7 +568,7 @@ public class ExportExcelMutiSheet {
      *
      * @param os 输出数据流
      */
-    public ExportExcelMutiSheet write(SXSSFWorkbook wb, OutputStream os) throws IOException {
+    public ExportExcelMutiSheet write(SXSSFWorkbook wb,OutputStream os) throws IOException {
         wb.write(os);
         return this;
     }
@@ -652,30 +578,25 @@ public class ExportExcelMutiSheet {
      *
      * @param fileName 输出文件名
      */
-    public ExportExcelMutiSheet write(SXSSFWorkbook wb, HttpServletResponse response, String fileName) throws IOException {
+    public ExportExcelMutiSheet write(SXSSFWorkbook wb, HttpServletRequest request, HttpServletResponse response, String fileName) throws IOException {
         response.reset();
         response.setContentType("multipart/form-data");
-
-        response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, "UTF-8"));
+//        各个浏览器的处理
+        response.setHeader("Content-Disposition", "attachment; filename=" + HttpExplorer.getFileNameEncoder(request,fileName));
         write(wb, response.getOutputStream());
         return this;
     }
 
     /**
      * 输出到客户端
-     *  * 重载的原因：
-     *      因为火狐浏览器自己会对url进行一次编码，所以火狐浏览器下载的文件名是乱码的。
-     *      重载的函数添加request参数，对浏览器进行判断，对不同的浏览器文件名进行不同方式的编码。
-     *      --liyaoheng
      *
      * @param fileName 输出文件名
      */
-    public ExportExcelMutiSheet write(SXSSFWorkbook wb, HttpServletRequest request, HttpServletResponse response, String fileName) throws IOException {
+    public ExportExcelMutiSheet write(SXSSFWorkbook wb,HttpServletResponse response, String fileName) throws IOException {
         response.reset();
         response.setContentType("multipart/form-data");
-
-        response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
-        write(wb, response.getOutputStream());
+        response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, "UTF-8"));
+        write(wb,response.getOutputStream());
         return this;
     }
 
@@ -684,9 +605,9 @@ public class ExportExcelMutiSheet {
      *
      * @param name 输出文件名
      */
-    public ExportExcelMutiSheet writeFile(SXSSFWorkbook wb, String name) throws FileNotFoundException, IOException {
+    public ExportExcelMutiSheet writeFile(SXSSFWorkbook wb,String name) throws FileNotFoundException, IOException {
         FileOutputStream os = new FileOutputStream(name);
-        this.write(wb, os);
+        this.write(wb,os);
         return this;
     }
 
@@ -706,7 +627,7 @@ public class ExportExcelMutiSheet {
      * @param <E>
      * @return
      */
-    public <E> ExportExcelMutiSheet setDataListByHeader(List<E> list, List<String> headerList, SXSSFWorkbook wb) {
+    public <E> ExportExcelMutiSheet setDataListByHeader(List<E> list, List<String> headerList,SXSSFWorkbook wb) {
         try {
             for (E e : list) {
                 int colunm = 0;
@@ -720,7 +641,7 @@ public class ExportExcelMutiSheet {
                             ExcelField myAnnotation = m.getAnnotation(ExcelField.class);
                             if (myAnnotation.title().equals(head)) {
                                 val = Reflections.invokeMethod(e, m.getName(), new Class[]{}, new Object[]{});
-                                this.addCell(wb, row, colunm++, val, 2, e.getClass());
+                                this.addCell(wb,row, colunm++, val, 2, e.getClass());
                                 sb.append(val + ", ");
                             }
                         }
@@ -736,249 +657,7 @@ public class ExportExcelMutiSheet {
         return this;
     }
 
-    public ExportExcelMutiSheet(int width, SXSSFWorkbook wb, String sheetName, Integer sheetIndex, String title, Class<?> cls, int type, String anno, int... groups) {
-        // Get annotation field
-        Field[] fs = cls.getDeclaredFields();
-        for (Field f : fs) {
-            ExcelField ef = f.getAnnotation(ExcelField.class);
-            if (ef != null && (ef.type() == 0 || ef.type() == type)) {
-                if (groups != null && groups.length > 0) {
-                    boolean inGroup = false;
-                    for (int g : groups) {
-                        if (inGroup) {
-                            break;
-                        }
-                        for (int efg : ef.groups()) {
-                            if (g == efg) {
-                                inGroup = true;
-                                annotationList.add(new Object[]{ef, f});
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    annotationList.add(new Object[]{ef, f});
-                }
-            }
-        }
-        // Get annotation method
-        Method[] ms = cls.getDeclaredMethods();
-        for (Method m : ms) {
-            ExcelField ef = m.getAnnotation(ExcelField.class);
-            if (ef != null && (ef.type() == 0 || ef.type() == type)) {
-                if (groups != null && groups.length > 0) {
-                    boolean inGroup = false;
-                    for (int g : groups) {
-                        if (inGroup) {
-                            break;
-                        }
-                        for (int efg : ef.groups()) {
-                            if (g == efg) {
-                                inGroup = true;
-                                annotationList.add(new Object[]{ef, m});
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    annotationList.add(new Object[]{ef, m});
-                }
-            }
-        }
-        // Field sorting
-        Collections.sort(annotationList, new Comparator<Object[]>() {
-            public int compare(Object[] o1, Object[] o2) {
-                return new Integer(((ExcelField) o1[0]).sort()).compareTo(
-                        new Integer(((ExcelField) o2[0]).sort()));
-            }
-        });
-        // Initialize
-        List<String> headerList = Lists.newArrayList();
-        List<Integer> reds = Lists.newArrayList();
-        for (Object[] os : annotationList) {
-            ExcelField field = (ExcelField) os[0];
-
-
-            String t = field.title();
-            int red = field.isnull();
-            // 如果是导出，则去掉注释
-            if (type == 1) {
-                String[] ss = StringUtils.split(t, "**", 2);
-                if (ss.length == 2) {
-                    t = ss[0];
-                }
-            }
-            reds.add(red);
-            //================================LL===========================================
-//            int hebingcout = field.hebingcout();
-//            if (hebingcout > 0) {
-//                t += ";" + hebingcout;
-//            }
-            //==================================LL=========================================
-            headerList.add(t);
-
-        }
-        initialize(wb, sheetName, sheetIndex, title, headerList, anno, reds, type, width);
-    }
-
-
-    private void initialize(SXSSFWorkbook wb, String sheetName, Integer sheetIndex, String title, List<String> headerList, String anno, List<Integer> reds, Integer type, int width) {
-
-        this.sheet = wb.createSheet();
-        wb.setSheetName(sheetIndex, sheetName);
-
-        if (headerList.size() > 1) {
-            this.styles = createStyles(wb);
-        } else {
-            this.styles = createSingleStyles(wb);
-        }
-        // Create title
-        if (StringUtils.isNotBlank(title)) {
-            Row titleRow = sheet.createRow(rownum++);
-            titleRow.setHeightInPoints(40);
-            Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellStyle(styles.get("title"));
-            titleCell.setCellValue(title);
-            if (headerList.size() > 1) {
-                sheet.addMergedRegion(new CellRangeAddress(titleRow.getRowNum(),
-                        titleRow.getRowNum(), titleRow.getRowNum(), headerList.size() - 1));
-            }
-        }
-        if (type == 2) {
-            Row introRow = sheet.createRow(rownum++);
-            introRow.setHeightInPoints(100);
-            Cell introCell = introRow.createCell(0);
-            styles.get("intro").setVerticalAlignment(CellStyle.VERTICAL_CENTER);
-            introCell.setCellStyle(styles.get("intro"));
-            introCell.setCellValue(new XSSFRichTextString(anno));       //HSSFRichTextString
-            if (headerList.size() > 1) {
-                sheet.addMergedRegion(new CellRangeAddress(introRow.getRowNum(),
-                        introRow.getRowNum(), introRow.getRowNum() - 1, headerList.size() - 1));
-            }
-        }
-
-        // Create header
-        if (headerList == null) {
-            throw new RuntimeException("headerList not null!");
-        }
-        Row headerRow = sheet.createRow(rownum++);
-
-        headerRow.setHeightInPoints(16);
-        Integer recordTotalCell = 0;
-
-
-        for (int i = 0; i < headerList.size(); i++) {
-            //==========================滑腻腻的分割线以下部分是LL所写  有问题找她哦===========================
-            //这里是控制表头是否合并单元格的
-            //创建单元格的时候   index包含头不包含尾 （和substring很像哦）
-            String oneHead = headerList.get(i);
-            Integer cells = 0;
-            if (oneHead.indexOf(";") > 0) {
-                String[] headAndCellCount = oneHead.split(";");
-                String strCell = headAndCellCount[1];
-                cells = Integer.parseInt(strCell);
-            }
-
-            //是否合单元格的判断
-            Cell cell =  null;
-            if (i>0){
-                cell = headerRow.createCell(recordTotalCell);
-            }else {
-                cell =  headerRow.createCell(i);
-            }
-            if (cells>0){
-                for (int m=1;m<cells;m++){
-                    recordTotalCell++;
-//                    System.out.println(recordTotalCell);
-                    headerRow.createCell(recordTotalCell);
-                    if (cells-1==m){
-                        recordTotalCell++;
-                    }
-                }
-
-                for (int m=1;m<cells;m++){
-                    headerRow.createCell(i+m+1);
-                    recordTotalCell=i+m+1;
-                }
-                CellRangeAddress region = new CellRangeAddress(headerRow.getRowNum(),
-                        headerRow.getRowNum(), i, i+recordTotalCell-1);
-                sheet.addMergedRegion(region);
-            }else {
-                recordTotalCell++;
-            }
-
-
-            //=====================================滑腻腻的分割线以上部分是LL所写  有问题找她哦==========================================================
-            if (reds != null && reds.size() > 0) {
-                if (reds.get(i) == 0) {
-                    cell.setCellStyle(styles.get("header"));
-                }
-                if (reds.get(i) == 1) {
-                    cell.setCellStyle(styles.get("header2"));
-                }
-            }
-
-            String[] ss = StringUtils.split(headerList.get(i), "**", 2);
-            if (ss.length == 2) {
-                if (ss[0].indexOf(";")>0){
-                    cell.setCellValue(ss[0].split(";")[0]);
-                }else {
-                    cell.setCellValue(ss[0]);
-                }
-
-                Comment comment = this.sheet.createDrawingPatriarch().createCellComment(
-                        new XSSFClientAnchor(0, 0, 0, 0, (short) 3, 3, (short) 5, 6));
-                comment.setString(new XSSFRichTextString(ss[1]));
-                cell.setCellComment(comment);
-            } else {
-                if (ss[0].indexOf(";")>0){
-//                    System.out.println(ss[0]);
-//                    System.out.println(ss[0].split(";")[0]);
-                    cell.setCellValue(ss[0].split(";")[0]);
-                }else {
-//                    System.out.println(headerList.get(i));
-                    cell.setCellValue(headerList.get(i));
-                }
-            }
-            //==========================LL 有问题找她===========================
-//            sheet.autoSizeColumn(i);
-        }
-        for (int i = 0; i < headerList.size(); i++) {
-            int colWidth = sheet.getColumnWidth(i) * 2;
-            sheet.setColumnWidth(i, width);
-        }
-
-        int flag=0;
-        while (true){
-            int colunm = 0;
-            Row row = this.addRow();
-            StringBuilder sb = new StringBuilder();
-            for (Object[] os : annotationList) {
-                ExcelField ef = (ExcelField) os[0];
-                Object val = null;
-                // Get entity value
-//                try {
-//
-//                    val = Reflections.invokeGetter("", ef.value());
-//
-//                } catch (Exception ex) {
-//                    // Failure to ignore
-//                    log.info(ex.toString());
-//                    val = "";
-//                }
-                this.addCell(wb,row, colunm++, val, ef.align(), ef.fieldType());
-                sb.append(val + ", ");
-            }
-            flag++;
-            if (flag>=300){
-                break;
-            }
-        }
-        log.debug("Initialize success.");
-    }
-
-
-    public ExportExcelMutiSheet(int width, SXSSFWorkbook wb, String sheetName, Integer sheetIndex, String title, Class<?> cls, int type, String anno, Integer height, Short cellType, String color, int... groups) {
+    public ExportExcelMutiSheet(int width,SXSSFWorkbook wb,String sheetName,Integer sheetIndex,String title, Class<?> cls, int type, String anno,int... groups) {
         // Get annotation field
         Field[] fs = cls.getDeclaredFields();
         for (Field f : fs) {
@@ -1054,18 +733,19 @@ public class ExportExcelMutiSheet {
             reds.add(red);
             headerList.add(t);
         }
-        initialize(wb, sheetName, sheetIndex, title, headerList, anno, reds, type, width, height, color, cellType);
+        initialize(wb,sheetName,sheetIndex,title, headerList, anno, reds, type,width);
     }
 
 
-    private void initialize(SXSSFWorkbook wb, String sheetName, Integer sheetIndex, String title, List<String> headerList, String anno, List<Integer> reds, Integer type, int width, Integer height, String color, Short cellType) {
+
+    private void initialize(SXSSFWorkbook wb,String sheetName,Integer sheetIndex,String title, List<String> headerList, String anno, List<Integer> reds, Integer type,int width) {
 
         this.sheet = wb.createSheet();
-        wb.setSheetName(sheetIndex, sheetName);
+        wb.setSheetName(sheetIndex,sheetName);
 
         if (headerList.size() > 1) {
             this.styles = createStyles(wb);
-        } else {
+        }else{
             this.styles = createSingleStyles(wb);
         }
         // Create title
@@ -1082,16 +762,168 @@ public class ExportExcelMutiSheet {
         }
         if (type == 2) {
             Row introRow = sheet.createRow(rownum++);
-            if (height == null) {
+            introRow.setHeightInPoints(100);
+            Cell introCell = introRow.createCell(0);
+            styles.get("intro").setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+            introCell.setCellStyle(styles.get("intro"));
+            introCell.setCellValue(new XSSFRichTextString(anno));       //HSSFRichTextString
+            if (headerList.size() > 1) {
+                sheet.addMergedRegion(new CellRangeAddress(introRow.getRowNum(),
+                        introRow.getRowNum(), introRow.getRowNum() - 1, headerList.size() - 1));
+            }
+        }
+
+        // Create header
+        if (headerList == null) {
+            throw new RuntimeException("headerList not null!");
+        }
+        Row headerRow = sheet.createRow(rownum++);
+        headerRow.setHeightInPoints(16);
+        for (int i = 0; i < headerList.size(); i++) {
+            Cell cell = headerRow.createCell(i);
+            if (reds != null && reds.size() > 0) {
+                if (reds.get(i) == 0) {
+                    cell.setCellStyle(styles.get("header"));
+                }
+                if (reds.get(i) == 1) {
+                    cell.setCellStyle(styles.get("header2"));
+                }
+            }
+
+            String[] ss = StringUtils.split(headerList.get(i), "**", 2);
+            if (ss.length == 2) {
+                cell.setCellValue(ss[0]);
+                Comment comment = this.sheet.createDrawingPatriarch().createCellComment(
+                        new XSSFClientAnchor(0, 0, 0, 0, (short) 3, 3, (short) 5, 6));
+                comment.setString(new XSSFRichTextString(ss[1]));
+                cell.setCellComment(comment);
+            } else {
+                cell.setCellValue(headerList.get(i));
+            }
+//            sheet.autoSizeColumn(i);
+        }
+        for (int i = 0; i < headerList.size(); i++) {
+            int colWidth = sheet.getColumnWidth(i) * 2;
+            sheet.setColumnWidth(i, width);
+        }
+        log.debug("Initialize success.");
+    }
+
+
+    public ExportExcelMutiSheet(int width,SXSSFWorkbook wb,String sheetName,Integer sheetIndex,String title, Class<?> cls, int type, String anno,Integer height,Short cellType,String color,int... groups) {
+        // Get annotation field
+        Field[] fs = cls.getDeclaredFields();
+        for (Field f : fs) {
+            ExcelField ef = f.getAnnotation(ExcelField.class);
+            if (ef != null && (ef.type() == 0 || ef.type() == type)) {
+                if (groups != null && groups.length > 0) {
+                    boolean inGroup = false;
+                    for (int g : groups) {
+                        if (inGroup) {
+                            break;
+                        }
+                        for (int efg : ef.groups()) {
+                            if (g == efg) {
+                                inGroup = true;
+                                annotationList.add(new Object[]{ef, f});
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    annotationList.add(new Object[]{ef, f});
+                }
+            }
+        }
+        // Get annotation method
+        Method[] ms = cls.getDeclaredMethods();
+        for (Method m : ms) {
+            ExcelField ef = m.getAnnotation(ExcelField.class);
+            if (ef != null && (ef.type() == 0 || ef.type() == type)) {
+                if (groups != null && groups.length > 0) {
+                    boolean inGroup = false;
+                    for (int g : groups) {
+                        if (inGroup) {
+                            break;
+                        }
+                        for (int efg : ef.groups()) {
+                            if (g == efg) {
+                                inGroup = true;
+                                annotationList.add(new Object[]{ef, m});
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    annotationList.add(new Object[]{ef, m});
+                }
+            }
+        }
+        // Field sorting
+        Collections.sort(annotationList, new Comparator<Object[]>() {
+            public int compare(Object[] o1, Object[] o2) {
+                return new Integer(((ExcelField) o1[0]).sort()).compareTo(
+                        new Integer(((ExcelField) o2[0]).sort()));
+            }
+
+            ;
+        });
+        // Initialize
+        List<String> headerList = Lists.newArrayList();
+        List<Integer> reds = Lists.newArrayList();
+        for (Object[] os : annotationList) {
+            ExcelField field = (ExcelField) os[0];
+
+            String t = field.title();
+            int red = field.isnull();
+            // 如果是导出，则去掉注释
+            if (type == 1) {
+                String[] ss = StringUtils.split(t, "**", 2);
+                if (ss.length == 2) {
+                    t = ss[0];
+                }
+            }
+            reds.add(red);
+            headerList.add(t);
+        }
+        initialize(wb,sheetName,sheetIndex,title, headerList, anno, reds, type,width,height,color,cellType);
+    }
+
+
+    private void initialize(SXSSFWorkbook wb,String sheetName,Integer sheetIndex,String title, List<String> headerList, String anno, List<Integer> reds, Integer type,int width,Integer height,String color,Short cellType) {
+
+        this.sheet = wb.createSheet();
+        wb.setSheetName(sheetIndex,sheetName);
+
+        if (headerList.size() > 1) {
+            this.styles = createStyles(wb);
+        }else{
+            this.styles = createSingleStyles(wb);
+        }
+        // Create title
+        if (StringUtils.isNotBlank(title)) {
+            Row titleRow = sheet.createRow(rownum++);
+            titleRow.setHeightInPoints(40);
+            Cell titleCell = titleRow.createCell(0);
+            titleCell.setCellStyle(styles.get("title"));
+            titleCell.setCellValue(title);
+            if (headerList.size() > 1) {
+                sheet.addMergedRegion(new CellRangeAddress(titleRow.getRowNum(),
+                        titleRow.getRowNum(), titleRow.getRowNum(), headerList.size() - 1));
+            }
+        }
+        if (type == 2) {
+            Row introRow = sheet.createRow(rownum++);
+            if (height==null){
                 height = 100;
             }
             introRow.setHeightInPoints(height);
             Cell introCell = introRow.createCell(0);
-            if (cellType == null) {
-                cellType = CellStyle.VERTICAL_CENTER;
+            if (cellType==null){
+                cellType =CellStyle.VERTICAL_CENTER;
             }
             styles.get("intro").setVerticalAlignment(cellType);
-            if (StringUtils.isEmpty(color)) {
+            if (StringUtils.isEmpty(color)){
                 color = "intro";
             }
             introCell.setCellStyle(styles.get(color));
