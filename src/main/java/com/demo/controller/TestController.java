@@ -11,12 +11,16 @@ import com.demo.utils.StreamUtils;
 import com.demo.utils.ZipUtils;
 import com.demo.utils.export.ExportExcel;
 import com.demo.utils.export.ExportExcelMutiSheet;
+import com.demo.utils.export.ImportExcel;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -203,15 +207,36 @@ public class TestController {
     public void mulitySheet(HttpServletRequest request, HttpServletResponse response) {
         try {
             SXSSFWorkbook wb = new SXSSFWorkbook();
-            new ExportExcelMutiSheet(wb, "网关批量绑定", 0, "网关批量绑定", ClassView.class, 2, "", 1).setDataList(new ArrayList(), wb);
-            new ExportExcelMutiSheet(wb, "区域列表", 1, "区域列表", ClassView.class, 1, "").setDataList(new ArrayList(), wb);
-            new ExportExcelMutiSheet(wb, "教室列表",2, "教室列表", ClassView.class, 1, "").setDataList(new ArrayList(), wb);
-            new ExportExcelMutiSheet(wb, "示例数据",3, "网关批量绑定模板", ClassView.class, 2, "", 1).setDataList(new ArrayList(), wb).write(wb, response, "aa.xlsx").dispose(wb);
+            new ExportExcelMutiSheet(wb, "a", 0, "a", ClassView.class, 2, "", 1).setDataList(new ArrayList(), wb);
+            new ExportExcelMutiSheet(wb, "b", 1, "b", ClassView.class, 1, "").setDataList(new ArrayList(), wb);
+            new ExportExcelMutiSheet(wb, "c",2, "c", ClassView.class, 1, "").setDataList(new ArrayList(), wb);
+            new ExportExcelMutiSheet(wb, "d",3, "d", ClassView.class, 2, "", 1).setDataList(new ArrayList(), wb).write(wb, response, "aa.xlsx").dispose(wb);
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
+    }
+
+
+    /**
+     *
+     * @param file
+     * @throws IOException
+     * @throws InvalidFormatException
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     */
+    @ResponseBody
+    @RequestMapping(value = "/in/data")
+    public void importCardExcelInfo(@RequestParam(value = "file") MultipartFile file) throws IOException, InvalidFormatException, IllegalAccessException, InstantiationException {
+        try {
+            ImportExcel importExcel = new ImportExcel(file, 2, 0);  //从第一行开始
+            List<ClassView> dataList = importExcel.getDataList(ClassView.class, 1);
+            System.out.println(dataList);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
 
